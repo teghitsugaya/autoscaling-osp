@@ -1,0 +1,232 @@
+#!/bin/bash
+
+# Fungsi untuk menghasilkan string alfanumerik acak 4 karakter
+generate_random_string() {
+  tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 4
+}
+
+# Fungsi untuk menampilkan pesan penggunaan
+usage() {
+  echo "Usage: $0 <command> [options]"
+  echo "Commands:"
+  echo "  create <name>         Create a stack with the given name"
+  echo "  list                  List all stacks"
+  echo "  show status <name>    Show servers and alarms with names matching the prefix of the given name"
+  echo "  show cpu-usage <name> Show CPU usage metrics for the given stack name"
+  echo "  delete <name>         Delete the stack with the given name"
+}
+
+# Periksa apakah argumen ada
+if [ "$#" -lt 1 ]; then
+  usage
+  exit 1
+fi
+
+# Ambil perintah utama
+command="$1"
+shift
+
+case "$command" in
+  create)
+    # Periksa apakah argumen nama diberikan
+    if [ "$#" -lt 1 ]; then
+      echo "Error: Missing stack name."
+      usage
+      exit 1
+    fi
+    base_name="$1"
+    random_suffix=$(generate_random_string)
+    stack_name="${base_name}-autoscaling-${random_suffix}"
+    shift
+
+    # Jalankan perintah untuk membuat stack dan tangkap outputnya
+    stack_create_output=$(openstack stack create -t template.yaml -e environment.yaml "$stack_name" 2>&1)
+
+    # Periksa apakah perintah berhasil
+    if [ $? -eq 0 ]; then
+      stack_id=$(echo "$stack_create_output" | grep ' id ' | awk '{print $4}')
+      status="CREATE_IN_PROGRESS"
+
+      # Tampilkan output dalam bentuk tabel dengan lebar kolom konsisten
+      printf "+---------------------+---------------------------------------------+\n"
+      printf "| %-19s | %-43s |\n" "Field" "Value"
+      printf "+---------------------+---------------------------------------------+\n"
+      printf "| %-19s | %-43s |\n" "id" "$stack_id"
+      printf "| %-19s | %-43s |\n" "autoscaling_name" "$stack_name"
+      printf "| %-19s | %-43s |\n" "Autoscacling_status" "$status"
+      printf "+---------------------+---------------------------------------------+\n"
+    else
+      # Tampilkan error jika perintah gagal
+      echo "Error creating stack:"
+      echo "$stack_create_output"
+      exit 1
+    fi
+    ;;
+
+  list)
+    # Ambil data dari perintah OpenStack dan format tabel
+    output=$(openstack stack list --format csv | tail -n +2 | grep -i "autoscaling" | while IFS=',' read -r id name status created updated; do
+      # Hapus tanda kutip dari ID, Name, dan Status
+      id=$(echo "$id" | tr -d '"')
+      name=$(echo "$name" | tr -d '"')
+      status=$(echo "$status" | tr -d '"')
+
+      # Format baris tabel dengan printf
+      printf "| %-36s | %-30s | %-25s |\n" "$id" "$name" "$status"
+    done)
+
+    # Tampilkan header tabel
+    printf "+--------------------------------------+--------------------------------+---------------------------+\n"
+    printf "| %-36s | %-30s | %-25s |\n" "ID" "Autoscaling Name" "Autoscaling Status"
+    printf "+--------------------------------------+--------------------------------+---------------------------+\n"
+
+    # Tampilkan isi tabel
+    echo "$output"
+
+    # Tampilkan footer tabel
+    printf "+--------------------------------------+--------------------------------+---------------------------+\n"
+    ;;
+
+  show)
+    # Periksa apakah argumen nama diberikan
+    if [ "$#" -lt 1 ]; then
+      echo "Error: Missing subcommand."
+      usage
+      exit 1
+    fi
+    subcommand="$1"
+    shift
+
+    case "$subcommand" in
+      cpu-usage)
+        # Periksa apakah argumen nama diberikan
+        if [ "$#" -lt 1 ]; then
+          echo "Error: Missing stack name for CPU usage."
+          usage
+          exit 1
+        fi
+        stack_name="$1"
+        # Menampilkan metric CPU menggunakan ID stack yang ditemukan
+        stack_id=$(openstack stack list | grep "$stack_name" | awk '{print $2}')
+        if [ -z "$stack_id" ]; then
+          echo "Error: Stack '$stack_name' not found."
+          exit 1
+        fi
+
+        openstack metric aggregates --resource-type instance "(aggregate rate:mean (metric cpu mean))" server_group="$stack_id" | tail -n 11 | awk '
+        {
+          if (NR == 1) {
+            # Print header first
+            print "+---------------------+-------------+"
+            print "| timestamp           | cpu usage % |"
+            print "+---------------------+-------------+"
+          }
+          if ($8 != "" && $8 ~ /^[0-9]+([.][0-9]+)?$/) {
+            sub(/\+00:00$/, "", $4);  # Remove +00:00 from the timestamp
+            gsub("T", " ", $4);  # Replace T with space
+            # Calculate the percentage and round to two decimal places
+            cpu_usage = ($8 / (1e9 * 300)) * 100
+            # Print data rows with rounded values
+            printf("| %-19s | %-10.2f  |\n", $4, cpu_usage);
+          }
+        }
+        END {
+          # Print footer after data
+          print "+---------------------+-------------+"
+        }'
+        ;;
+
+      status)
+        # Menampilkan server dan alarm sesuai dengan nama stack
+        if [ "$#" -lt 1 ]; then
+          echo "Error: Missing stack name for status."
+          usage
+          exit 1
+        fi
+
+        name="$1"
+        shift
+        prefix=$(echo "$name" | cut -c1-2)
+
+        # Menyimpan output dari kedua perintah dalam variabel
+        server_output=$(openstack server list | grep "$prefix" | awk '
+        BEGIN {
+          # Header tabel hanya dicetak sekali
+          print "SERVER STATUS"
+          print "+--------------------------------------+-------------------------------------------------------------+--------+-------------------------------------+---------+"
+          print "| ID                                   | Name                                                        | Status | Networks                            | Flavor  |"
+          print "+--------------------------------------+-------------------------------------------------------------+--------+-------------------------------------+---------+"
+        }
+        {
+          # Periksa apakah data valid
+          if ($2 != "" && $4 != "" && $6 != "" && $8 != "" && $10 != "") {
+            # Format setiap baris dengan panjang kolom yang konsisten
+            printf "| %-36s | %-59s | %-6s | %-35s | %-7s |\n", $2, $4, $6, $8, $15
+          }
+        }
+        END {
+          # Footer tabel
+          print "+--------------------------------------+-------------------------------------------------------------+--------+-------------------------------------+---------+"
+        }')
+
+       alarm_output=$( openstack alarm list -c alarm_id -c name -c state -c enabled --format=csv | awk -v filter="$prefix" '
+        BEGIN {
+          # Header tabel
+          print "ALARM STATUS"
+          print "+--------------------------------------+---------------------------------------------+---------------------+---------+"
+          print "| alarm_id                             | name                                        | state               | enabled |"
+          print "+--------------------------------------+---------------------------------------------+---------------------+---------+"
+        }
+        NR > 1 { # Abaikan header bawaan CSV (baris pertama)
+		  # Hapus tanda kutip pada setiap kolom
+		  gsub(/"/, "", $0)
+          # Split baris input menjadi kolom berdasarkan koma
+          split($0, cols, ",")
+          if (length(cols) >= 4 && index(cols[2], filter) > 0 ) {
+            # Format baris data
+            printf "| %-36s | %-43s | %-19s | %-7s |\n", substr(cols[1], 1, 36), substr(cols[2], 1, 43), cols[3], cols[4]
+          }
+        }
+        END {
+          # Footer tabel
+          print "+--------------------------------------+---------------------------------------------+---------------------+---------+"
+        }')
+
+
+        echo "$server_output"
+        echo
+        echo "$alarm_output"
+        ;;
+
+    esac
+    ;;
+
+  delete)
+    # Periksa apakah argumen nama diberikan
+    if [ "$#" -lt 1 ]; then
+      echo "Error: Missing stack name."
+      usage
+      exit 1
+    fi
+    stack_name="$1"
+    # Ambil ID stack dari nama stack
+    stack_id=$(openstack stack list | grep "$stack_name" | grep -v '^+' | awk '{print $2}')
+
+    if [ -z "$stack_id" ]; then
+      echo "Error: Stack with name '$stack_name' not found."
+      exit 1
+    fi
+
+    # Hapus stack yang sesuai dengan ID
+    echo "Deleting autoscaling '$stack_name'"
+    openstack stack delete "$stack_id" -y #--wait
+    echo "Autoscaling '$stack_name' deleted successfully."
+    ;;
+
+  * )
+    echo "Error: Unknown command '$command'."
+    usage
+    exit 1
+    ;;
+esac
+

@@ -1,0 +1,52 @@
+  heat_template_version: 2016-10-14
+  description: Template to spawn an cirros instance.
+
+  parameters:
+    metadata:
+      type: json
+    image:
+      type: string
+      description: image used to create instance
+      default: "Ubuntu Server 22.04"
+    flavor:
+      type: string
+      description: instance flavor to be used
+      default: "GP.1C1G"
+    key_name:
+      type: string
+      description: keypair to be used
+      default: "remote-server"
+    network:
+      type: string
+      description: project network to attach instance to
+      default: "Subnet_Private01_DC1"
+    availability_zone:
+      type: string
+      description: Nova availability zone name
+      default: "AZ_Private01_DC1"
+  resources:
+    server:
+      type: OS::Nova::Server
+      properties:
+        block_device_mapping:
+          - device_name: vda
+            delete_on_termination: true
+            volume_id: { get_resource: volume }
+        flavor: {get_param: flavor}
+        key_name: {get_param: key_name}
+        metadata: {get_param: metadata}
+        networks:
+          - port: { get_resource: port }
+        availability_zone: {get_param: availability_zone}
+    port:
+      type: OS::Neutron::Port
+      properties:
+        network: {get_param: network}
+        security_groups:
+          - allow-all
+    volume:
+      type: OS::Cinder::Volume
+      properties:
+        availability_zone: {get_param: availability_zone}
+        image: {get_param: image}
+        size: 10
