@@ -69,7 +69,7 @@
     autoscalingctl show status <name>
     autoscalingctl show status myinstance-xxxx
 
-   ## Create a new tab and Watch the CPU Usage Autoscaling resources (the metrics utilyze cpu usage will be appear in every 300s)
+   ## Create a new tab and Watch the CPU Usage Autoscaling resources (the metrics utilization cpu usage will be appear in every 300s)
     watch autoscalingctl show cpu-usage <name>
     watch autoscalingctl show cpu-usage myinstance-xxxx 
         
