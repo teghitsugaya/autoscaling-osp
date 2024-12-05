@@ -81,7 +81,7 @@
       stress-ng --cpu 4
       htop
       
-   ## Back to CPU Usage Autoscaling resources tab, and look the cpu usages, its will be increases (the metrics utilyze cpu usage will be appear in every 300s)
-   ## Backto the Status resources autoscaling, observe changes in alarm status, alarm status high will be change to alert , and amount of instances
+   ### Back to CPU Usage Autoscaling resources tab, and look the cpu usages, its will be increases (the metrics utilyze cpu usage will be appear in every 300s)
+   ## Back to the Status resources autoscaling, observe changes in alarm status, alarm status high will be change to alert , and amount of instances
       watch autoscaling show status <name>
       watch autoscaling show status myinstance-xxxx
