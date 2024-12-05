@@ -81,8 +81,8 @@
     ssh -l <your key_name> ubuntu@<ipaddress>
     sudo su
     apt update
-    apt install -y stress-ng
-    stress-ng --cpu 4
+    apt install -y stress-ng 
+    stress-ng --cpu 4 &
     htop
       
    ## Back to CPU Usage Autoscaling resources tab, and look the cpu usages, its will be increases (the metrics utilyze cpu usage will be appear in every 300s)
