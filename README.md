@@ -10,7 +10,7 @@
     autoscalingctl list
 
   ## Create Autoscaling
-  ### Edit the instance.yaml file and change based your requierement
+  #### Edit the instance.yaml file and change based your requierement
     parameters:
       image:
         default: "Ubuntu Server 22.04"
@@ -30,8 +30,8 @@
     volume:
         size: 10
 
-  ### Edit the template.yaml file and change based your requierement
-  ### choose the threshold alarm_high (50% - 80%) / instance will do scale out if the resource cpu have more than the threshold
+  #### Edit the template.yaml file and change based your requierement
+  #### choose the threshold alarm_high (50% - 80%) / instance will do scale out if the resource cpu have more than the threshold
     cpu_alarm_high:
       type: OS::Aodh::GnocchiAggregationByResourcesAlarm
       properties:
@@ -45,7 +45,7 @@
         threshold: 180000000000.0   #60%
           #threshold: 150000000000.0   #50%
           
-   ### choose the threshold alarm_low (50% - 80%) / instance will do scale down if the resource cpu have less than the threshold
+   #### choose the threshold alarm_low (50% - 80%) / instance will do scale down if the resource cpu have less than the threshold
     cpu_alarm_low:
       type: OS::Aodh::GnocchiAggregationByResourcesAlarm
       properties:
