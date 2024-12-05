@@ -81,7 +81,7 @@
     ssh -l <your key_name> ubuntu@<ipaddress>
     sudo su
     apt update
-    apt install stress-ng
+    apt install -y stress-ng
     stress-ng --cpu 4
     htop
       
