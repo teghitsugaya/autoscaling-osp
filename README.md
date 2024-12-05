@@ -59,32 +59,32 @@
           #threshold: 15000000000.0  #5%
 
    ## Create the autoscaling
-      autoscalingctl create <name>
-      autoscalingctl create myinstance
+    autoscalingctl create <name>
+    autoscalingctl create myinstance
       
    ## Show list resource autoscaling
-      autoscalingctl list
+    autoscalingctl list
       
    ## Show status resource autoscaling
-      autoscalingctl show status <name>
-      autoscalingctl show status myinstance-xxxx
+    autoscalingctl show status <name>
+    autoscalingctl show status myinstance-xxxx
 
    ## Watch the CPU Usage Autoscaling resources (the metrics utilyze cpu usage will be appear in every 300s)
-      watch autoscalingctl show cpu-usage <name>
-      watch autoscalingctl show cpu-usage myinstance-xxxx 
+    watch autoscalingctl show cpu-usage <name>
+    watch autoscalingctl show cpu-usage myinstance-xxxx 
         
    ## Genereate utilize CPU the instances
-      ssh ubuntu@<ipaddress>
-      sudo su
-      apt update
-      apt install stress-ng
-      stress-ng --cpu 4
-      htop
+    ssh ubuntu@<ipaddress>
+    sudo su
+    apt update
+    apt install stress-ng
+    stress-ng --cpu 4
+    htop
       
    ## Back to CPU Usage Autoscaling resources tab, and look the cpu usages, its will be increases (the metrics utilyze cpu usage will be appear in every 300s)
-      watch autoscalingctl show cpu-usage <name>
-      watch autoscalingctl show cpu-usage myinstance-xxxx
+    watch autoscalingctl show cpu-usage <name>
+    watch autoscalingctl show cpu-usage myinstance-xxxx
       
    ## Back to the Status resources autoscaling, observe changes in alarm status, alarm status high will be change to alert , and amount of instances
-      watch autoscalingctl show status <name>
-      watch autoscalingctl show status myinstance-xxxx
+    watch autoscalingctl show status <name>
+    watch autoscalingctl show status myinstance-xxxx
