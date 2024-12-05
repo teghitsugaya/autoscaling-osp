@@ -69,11 +69,15 @@
     autoscalingctl show status <name>
     autoscalingctl show status myinstance-xxxx
 
-   ## Watch the CPU Usage Autoscaling resources (the metrics utilyze cpu usage will be appear in every 300s)
+   ## Create a new tab and Watch the CPU Usage Autoscaling resources (the metrics utilyze cpu usage will be appear in every 300s)
     watch autoscalingctl show cpu-usage <name>
     watch autoscalingctl show cpu-usage myinstance-xxxx 
         
-   ## Genereate utilize CPU the instances
+   ## Genereate utilize CPU the instances, 
+   ### get the ip address instance using show status resource autoscaling
+    autoscalingctl show status <name>
+    autoscalingctl show status myinstance-xxxx
+    
     ssh ubuntu@<ipaddress>
     sudo su
     apt update
