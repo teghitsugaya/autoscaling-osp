@@ -73,7 +73,7 @@
     watch autoscalingctl show cpu-usage <name>
     watch autoscalingctl show cpu-usage myinstance-xxxx 
         
-   ## Genereate utilize CPU the instances, 
+   ## Genereate utilize CPU the instances to 100% usage CPU 
    ### get the ip address instance using show status resource autoscaling
     autoscalingctl show status <name>
     autoscalingctl show status myinstance-xxxx
