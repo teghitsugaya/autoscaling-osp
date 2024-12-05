@@ -67,8 +67,8 @@
       
    ## Show status resource autoscaling
     autoscalingctl show status <name>
-    autoscalingctl show status myinstance-xxxx
-
+    autoscalingctl show status myinstance-autoscaling-xxxx
+    
    ## Create a new tab and Watch the CPU Usage Autoscaling resources (the metrics utilization cpu usage will be appear in every 300s)
     watch autoscalingctl show cpu-usage <name>
     watch autoscalingctl show cpu-usage myinstance-xxxx 
@@ -76,7 +76,7 @@
    ## Genereate utilize CPU the instances to 100% usage CPU 
    ### get the ip address instance using show status resource autoscaling
     autoscalingctl show status <name>
-    autoscalingctl show status myinstance-xxxx
+    autoscalingctl show status myinstance-autoscaling-xxxx
     
     ssh -l <your key_name> ubuntu@<ipaddress>
     sudo su
@@ -87,8 +87,12 @@
       
    ## Back to CPU Usage Autoscaling resources tab, and look the cpu usages, its will be increases (the metrics utilyze cpu usage will be appear in every 300s)
     watch autoscalingctl show cpu-usage <name>
-    watch autoscalingctl show cpu-usage myinstance-xxxx
+    watch autoscalingctl show cpu-usage myinstance-autoscaling-xxxx
       
    ## Back to the Status resources autoscaling, observe changes in alarm status, alarm status high will be change to alert , and amount of instances
     watch autoscalingctl show status <name>
-    watch autoscalingctl show status myinstance-xxxx
+    watch autoscalingctl show status myinstance-autoscaling-xxxx
+
+   ## Delete Autoscaling Resources 
+    autoscalingctl delete <name>
+    autoscalingctl delete myinstance-autoscaling-xxxx
