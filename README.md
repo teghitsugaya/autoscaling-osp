@@ -78,7 +78,7 @@
     autoscalingctl show status <name>
     autoscalingctl show status myinstance-xxxx
     
-    ssh ubuntu@<ipaddress>
+    ssh -l <your key_name> ubuntu@<ipaddress>
     sudo su
     apt update
     apt install stress-ng
